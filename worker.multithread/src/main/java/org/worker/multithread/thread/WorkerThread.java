@@ -9,6 +9,7 @@ import org.logger.LoggerAPI;
 import org.worker.multithread.contracts.ThreadUtility;
 import org.worker.multithread.contracts.Work;
 import org.worker.multithread.contracts.Worker;
+import org.worker.multithread.thread.utility.ThreadUtilityFactory;
 
 public class WorkerThread extends Thread implements Worker {
 
@@ -27,6 +28,15 @@ public class WorkerThread extends Thread implements Worker {
 		startDeamonThreadForMonitoringThreads();
 	}
 
+	private WorkerThread(String workerName) {
+		super(workerName);
+		THREAD_COUNT++;
+		threadNumber = THREAD_COUNT;
+		THREAD_RESOURCES.put(THREAD_COUNT, this);
+		LoggerAPI.logInfo("Numer of Thread:" + THREAD_RESOURCES.size());
+		startDeamonThreadForMonitoringThreads();
+	}
+
 	public static Worker getWorker() {
 		Worker worker = findFreeWorkerFromThreadResources();
 		if (worker == null) {
@@ -35,9 +45,27 @@ public class WorkerThread extends Thread implements Worker {
 		return worker;
 	}
 
+	public static Worker getWorker(String workerName) {
+		Worker worker = findFreeWorkerFromThreadResources(workerName);
+		if (worker == null) {
+			worker = new WorkerThread(workerName);
+		}
+		return worker;
+	}
+
 	private static Worker findFreeWorkerFromThreadResources() {
 		for (Object key : THREAD_RESOURCES.keySet()) {
 			if (((WorkerThread) THREAD_RESOURCES.get(key)).isCurretWorkCompletedByThisWorker()) {
+				return (WorkerThread) THREAD_RESOURCES.get(key);
+			}
+		}
+		return null;
+	}
+
+	private static Worker findFreeWorkerFromThreadResources(String workerName) {
+		for (Object key : THREAD_RESOURCES.keySet()) {
+			if (((WorkerThread) THREAD_RESOURCES.get(key)).isCurretWorkCompletedByThisWorker()
+					&& ((WorkerThread) THREAD_RESOURCES.get(key)).getName().equals(workerName)) {
 				return (WorkerThread) THREAD_RESOURCES.get(key);
 			}
 		}
@@ -72,16 +100,20 @@ public class WorkerThread extends Thread implements Worker {
 
 	@Override
 	public void run() {
-		if (work != null && !isStopCommanExecuted) {
-			synchronized (this) {
-				work.doWork();
-				this.notify();
-				threadWorkCompleted = true;
+		try {
+			if (work != null && !isStopCommanExecuted) {
+				synchronized (this) {
+					work.doWork();
+					this.notify();
+					threadWorkCompleted = true;
+				}
+				work = null;
 			}
-			work = null;
+			if (isStopCommanExecuted)
+				return;
+		} catch (Throwable ex) {
+			ex.printStackTrace();
 		}
-		if (isStopCommanExecuted)
-			return;
 	}
 
 	private void releaseResources() {
@@ -101,7 +133,6 @@ public class WorkerThread extends Thread implements Worker {
 
 	private void startDeamonThreadForMonitoringThreads() {
 		Thread deamon = new Thread(new Runnable() {
-			@Override
 			public void run() {
 				while (true) {
 					try {
@@ -129,4 +160,5 @@ public class WorkerThread extends Thread implements Worker {
 	public boolean isThreadFinishedItsWork() {
 		return threadWorkCompleted;
 	}
+
 }

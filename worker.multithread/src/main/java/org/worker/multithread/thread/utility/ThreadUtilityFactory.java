@@ -1,4 +1,4 @@
-package org.worker.multithread.thread;
+package org.worker.multithread.thread.utility;
 
 import java.util.HashMap;
 import java.util.Map;
