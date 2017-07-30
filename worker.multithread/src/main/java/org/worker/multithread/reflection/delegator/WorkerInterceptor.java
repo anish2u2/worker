@@ -42,4 +42,8 @@ public class WorkerInterceptor implements MethodInterceptor {
 		LoggerAPI.logInfo("Interceptor:" + interceptor + " registered.");
 	}
 
+	public List<Interceptor> getListOfRegisteredInterceptors() {
+		return interceptors;
+	}
+
 }

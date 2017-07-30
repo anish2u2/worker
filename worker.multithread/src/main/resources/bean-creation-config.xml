@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This file is used for registering annotations and proxy class that will 
+	create those annotated classes. -->
+<config>
+	<register-annotation package="org.worker.multithread.annotation" />
+
+	<!-- This will return class which implements Proxy interface of factory 
+		and return the proxy object it is also used for initializing the app -->
+	<proxy-creator class="org.worker.multithread.reflection.proxy.ProxyFactory" />
+</config>

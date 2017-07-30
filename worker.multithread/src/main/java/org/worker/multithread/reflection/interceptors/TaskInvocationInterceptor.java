@@ -34,7 +34,7 @@ public class TaskInvocationInterceptor implements Interceptor {
 
 					public void doWork() throws Throwable {
 						Object result = null;
-						if ((Boolean) threadUtility.get(IS_SYNCY_TASK)) {
+						if (threadUtility.get(IS_SYNCY_TASK) != null && (Boolean) threadUtility.get(IS_SYNCY_TASK)) {
 							synchronized (object) {
 								result = proxyMethod.invokeSuper(object, arguments);
 								object.notifyAll();
